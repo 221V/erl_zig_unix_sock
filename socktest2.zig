@@ -8,13 +8,13 @@ const c = @cImport({
   @cInclude("unistd.h");
 });
 
-const SOCKET_PATH = "/tmp/socktest.sock";
+const SOCKET_PATH = "/tmp/socktest2.sock";
 
 
 pub fn main() !void{
   std.fs.deleteFileAbsolute(SOCKET_PATH) catch {}; // delete old if exists
   
-  const sock = c.socket(c.AF_UNIX, c.SOCK_STREAM, 0); // create new TCP sock, Unix domain (TCP-like)
+  const sock = c.socket(c.AF_UNIX, c.SOCK_DGRAM, 0); // create new TCP sock, Unix domain (TCP-like)
   if(sock == -1){
     std.debug.print("failed to create socket\n", .{});
     return error.SocketCreateFailed;
@@ -35,34 +35,29 @@ pub fn main() !void{
     return error.SocketBindFailed;
   }
   
-  if(c.listen(sock, 1) == -1){
-    std.debug.print("failed to listen socket\n", .{});
-    return error.SocketListenFailed;
-  }
+  std.debug.print("Zig UDP server is listening {s}\n", .{SOCKET_PATH});
   
-  std.debug.print("Zig server is listening {s}\n", .{SOCKET_PATH});
+  
+  var buffer: [256]u8 = undefined;
+  var sender_addr: c.struct_sockaddr_un = undefined;
+  var addr_len: c.socklen_t = @sizeOf(c.struct_sockaddr_un);
   
   while(true){
-    const client_fd = c.accept(sock, null, null);
-    if(client_fd == -1){
-      std.debug.print("accept error\n", .{});
+    const n_bytes = c.recvfrom(
+      sock,
+      &buffer,
+      buffer.len,
+      0,
+      @ptrCast(&sender_addr),
+      &addr_len
+    );
+    
+    if(n_bytes <= 0){
+      std.debug.print("receive error\n", .{});
       continue;
     }
     
-    std.debug.print("client connected\n", .{});
-    
-    const file = std.fs.File{ .handle = @intCast(client_fd) };
-    const in_stream = file.reader();
-    const out_stream = file.writer();
-    
-    var buffer: [256]u8 = undefined;
-    const n_bytes = in_stream.read(&buffer) catch |err|{ // read msg
-      std.debug.print("read msg err: {any}\n", .{err});
-      _ = c.close(client_fd);
-      continue;
-    };
-    
-    const msg = buffer[0..n_bytes];
+    const msg = buffer[0..@intCast(n_bytes)];
     std.debug.print("receive msg: {s}\n", .{msg});
     
     
@@ -95,8 +90,16 @@ pub fn main() !void{
       try writer.print("unknown command", .{});
     }
     
-    _ = try out_stream.write(fbs.getWritten()); // send responce
-    _ = c.close(client_fd);
+    const reply = fbs.getWritten();
+    
+    _ = c.sendto( // send responce
+      sock,
+      reply.ptr,
+      reply.len,
+      0,
+      @ptrCast(&sender_addr),
+      addr_len
+    );
   }
 }
 

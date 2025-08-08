@@ -15,11 +15,11 @@ connect() ->
     {active, false} %% sync
   ],
   
-  Conn = gen_tcp:connect({local, SocketPath}, 0, Options), %% Unix domain socket
+  Conn = gen_tcp:connect({local, SocketPath}, 0, Options), %% Unix domain socket TCP-like
   
   case Conn of
     {ok, Socket} ->
-      %%io:format("connected to Unix socket ~s~n", [SocketPath]),
+      %%io:format("connected to Unix socket (TCP) ~s~n", [SocketPath]),
       Socket;
     {error, Reason} ->
       io:format("connect err: ~p~n", [Reason]),

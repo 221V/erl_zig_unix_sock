@@ -28,7 +28,7 @@ connect() ->
 
 
 send(Message) when is_list(Message) orelse is_binary(Message) ->
-  Msg = iolist_to_binary(Message),
+  Msg = unicode:characters_to_binary(Message, utf8),
   Socket = connect(),
   send(Socket, Msg).
 

@@ -2,7 +2,7 @@
 
 ```
 erl 25
-zig 0.13.0
+zig 0.14.1
 (l)ubuntu 22.04 lts
 
 

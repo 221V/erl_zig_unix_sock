@@ -14,7 +14,7 @@ const SOCKET_PATH = "/tmp/socktest2.sock";
 pub fn main() !void{
   std.fs.deleteFileAbsolute(SOCKET_PATH) catch {}; // delete old if exists
   
-  const sock = c.socket(c.AF_UNIX, c.SOCK_DGRAM, 0); // create new TCP sock, Unix domain (TCP-like)
+  const sock = c.socket(c.AF_UNIX, c.SOCK_DGRAM, 0); // create new datagram sock, Unix domain (UDP-like)
   if(sock == -1){
     std.debug.print("failed to create socket\n", .{});
     return error.SocketCreateFailed;

@@ -12,7 +12,6 @@
 
 connect() ->
   catch file:delete(?SOCKET_CLIENT_PATH), %% delete old client sock if exists
-  %case socket:open(local, dgram, udp) of %% Unix domain socket UDP-like
   case socket:open(local, dgram, 0) of %% Unix domain socket UDP-like
     {ok, Socket} ->
       %%io:format("connected to Unix socket (UDP) ~s~n", [SocketPath]),

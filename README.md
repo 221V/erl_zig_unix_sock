@@ -8,6 +8,7 @@ zig 0.14.1
 
 socktest  -- TCP-like Unix domain socket example
 socktest2 -- UDP-like Unix domain socket example
+socktest3 -- SOCK_SEQPACKET Unix domain socket example
 ```
 
 
@@ -118,6 +119,60 @@ ok
 // in terminal 1 we can see
 ./socktest2
 Zig UDP server is listening /tmp/socktest2.sock
+receive msg: hello
+receive msg: factorial 5
+receive msg: factorial 20
+receive msg: factorial 34
+receive msg: factorial 35
+receive msg: factorial -5
+receive msg: factorial xyz
+receive msg: бла
+```
+
+### socktest3 -- SOCK_SEQPACKET Unix domain socket example
+```
+// in terminal 1
+$ zig build-exe socktest3.zig -O ReleaseFast --library c -femit-bin=socktest3
+
+$ ./socktest3
+Zig SEQPACKET server is listening /tmp/socktest3.sock
+
+
+// in terminal 2
+
+$ ls -la /tmp/socktest3.sock
+srwxrwxr-x 1 e e 0 сер 25 04:03 /tmp/socktest3.sock=
+
+$ lsof /tmp/socktest3.sock
+COMMAND      PID USER   FD   TYPE             DEVICE SIZE/OFF     NODE NAME
+socktest3 969440    e    3u  unix 0x00000000466b3db7      0t0 37558224 /tmp/socktest3.sock type=SEQPACKET
+
+$ erl
+1> c(socktest3).
+{ok,socktest3}
+2> socktest3:send("hello").
+<<"Hello World (by Zig) !">>
+3> socktest3:send("factorial 5").
+<<"factorial(5) = 120">>
+4> socktest3:send("factorial 20").
+<<"factorial(20) = 2432902008176640000">>
+5> socktest3:send("factorial 34").
+<<"factorial(34) = 295232799039604140847618609643520000000">>
+6> socktest3:send("factorial 35").
+<<"error: input too large, max is 34">>
+7> socktest3:send("factorial -5").
+<<"error: invalid number">>
+8> socktest3:send("factorial xyz").
+<<"error: invalid number">>
+9> socktest3:send("бла").
+<<"unknown command">>
+10> q().
+ok
+
+
+// in terminal 1 we can see
+./socktest3
+Zig SEQPACKET server is listening /tmp/socktest3.sock
 receive msg: hello
 receive msg: factorial 5
 receive msg: factorial 20

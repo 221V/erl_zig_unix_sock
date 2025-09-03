@@ -72,7 +72,7 @@ send(Socket, Message) ->
     
     E = {error, Reason} ->
       io:format("send err: ~p~n", [Reason]),
-      gen_udp:close(Socket),
+      socket:close(Socket),
       E
   end.
 
